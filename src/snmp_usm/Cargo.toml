@@ -1,0 +1,9 @@
+[package]
+name = "snmp_usm"
+description = "Implementation of the User-based Security Model (USM) for Simple Network Management Protocol (SNMP) version 3."
+version = "0.1.0"
+authors = ["David Dufresne <davedufresne@gmail.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+
+[dependencies]
