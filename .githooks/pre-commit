@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# This script should be saved in a git repo as a hook file, e.g. .git/hooks/pre-commit.
+# It looks for scripts in the .git/hooks/pre-commit.d directory and executes them in order,
+# passing along stdin. If any script exits with a non-zero status, this script exits.
+
+script_dir=$(dirname $0)
+hook_name=$(basename $0)
+hook_dir="$script_dir/$hook_name.d"
+
+exit_code=0
+
+if [[ -d $hook_dir ]]; then
+  stdin=$(cat /dev/stdin)
+
+  for hook in $hook_dir/*; do
+    echo "$stdin" | $hook "$@"
+
+    exit_status=$?
+    if [ $exit_status != 0 ]; then
+      exit_code=$exit_status
+    fi
+  done
+fi
+
+if [ $exit_code != 0 ]; then
+    echo "(use -n option \"git commit -n\" to avoid call pre-commit hook)"
+    echo ""
+fi
+
+exit $exit_code

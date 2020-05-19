@@ -1,0 +1,36 @@
+#!/bin/sh
+#
+# Run `cargo fmt` validation before commit.
+
+GREEN='\033[0;32m'
+NOCOLOR='\033[0m'
+
+echo "${GREEN}Running cargo fmt...${NOCOLOR}"
+echo
+
+cargo fmt -- --check
+exit_code=$?
+if [ "$exit_code" != 0 ]; then
+    echo
+    exit "$exit_code"
+fi
+
+echo "${GREEN}Running cargo clippy...${NOCOLOR}"
+echo
+
+cargo clippy --all-targets --all-features -- -D warnings
+exit_code=$?
+if [ "$exit_code" != 0 ]; then
+    echo
+    exit "$exit_code"
+fi
+
+echo "${GREEN}Running cargo test...${NOCOLOR}"
+echo
+
+cargo test
+exit_code=$?
+if [ "$exit_code" != 0 ]; then
+    echo
+    exit "$exit_code"
+fi
