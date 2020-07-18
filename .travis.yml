@@ -1,0 +1,23 @@
+language: rust
+os: linux
+dist: bionic
+cache: cargo
+before_script:
+  - rustup component add rustfmt
+  - rustup component add clippy
+rust:
+  - stable
+  - beta
+  - nightly
+jobs:
+  include:
+    - os: linux
+    - os: osx
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+script:
+  - cargo fmt -- --check
+  - cargo clippy --all-targets --all-features -- -D warnings
+  - cargo build
+  - cargo test
