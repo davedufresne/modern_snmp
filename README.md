@@ -4,6 +4,12 @@ Modern SNMP is a pure-Rust library for SNMPv3.
 
 SNMP is an Internet Standard protocol for collecting and organizing information about managed devices on IP networks and for modifying that information to change device behavior. Devices that typically support SNMP include cable modems, routers, switches, servers, workstations, printers, and more.
 
+## Implemented Modules
+
+| Name | Crate Name | crates.io | Docs | Build Status |
+|------|------------|-----------|------|--------------|
+|SNMP USM|snmp_usm|-|-|[![Build Status](https://travis-ci.org/davedufresne/modern_snmp.svg?branch=master)](https://travis-ci.org/davedufresne/modern_snmp)|
+
 ## License
 
 * Apache License, Version 2.0 ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
