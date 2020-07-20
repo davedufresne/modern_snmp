@@ -1,6 +1,6 @@
 # Implementation of the User-based Security Model (USM) for SNMPv3
 
-SNMP USM provides SNMP message level security according to RFC 3414 and RFC 3826. It implements primitives that can be used by a security subsystem.
+**SNMP USM** provides SNMP message level security according to RFC 3414 and RFC 3826. It implements primitives that can be used by a security subsystem.
 
 Implemented features of USM:
 
