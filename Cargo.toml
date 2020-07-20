@@ -1,4 +1,5 @@
 [workspace]
 members = [
+  "src/snmp_mp",
   "src/snmp_usm",
 ]

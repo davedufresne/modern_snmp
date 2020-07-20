@@ -1,0 +1,13 @@
+[package]
+name = "snmp_mp"
+description = "SNMPv3 Message Processing"
+version = "0.1.0" # remember to update html_root_url
+authors = ["David Dufresne <davedufresne@gmail.com>"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+readme = "README.md"
+repository = "https://github.com/davedufresne/modern_snmp"
+keywords = ["snmp", "snmpv3", "message", "processing", "pdu"]
+categories = ["network-programming"]
+
+[dependencies]
