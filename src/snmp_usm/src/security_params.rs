@@ -34,7 +34,7 @@ pub struct SecurityParams {
 }
 
 impl SecurityParams {
-    /// Alias for [discovery](#method.discovery).
+    /// Alias for [for_discovery](#method.for_discovery).
     pub fn new() -> Self {
         Self::default()
     }
@@ -53,7 +53,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// let security_params = SecurityParams::discovery();
+    /// let security_params = SecurityParams::for_discovery();
     /// assert_eq!(security_params.username(), b"");
     /// assert_eq!(security_params.engine_id(), b"");
     ///
@@ -61,7 +61,7 @@ impl SecurityParams {
     /// // message.
     /// // discovery_msg.set_security_params(&security_params.encode());
     /// ```
-    pub fn discovery() -> Self {
+    pub fn for_discovery() -> Self {
         Self::default()
     }
 
@@ -72,7 +72,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// # let security_params = SecurityParams::discovery();
+    /// # let security_params = SecurityParams::for_discovery();
     /// let engine_id = security_params.engine_id();
     /// ```
     pub fn engine_id(&self) -> &[u8] {
@@ -103,7 +103,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// # let security_params = SecurityParams::discovery();
+    /// # let security_params = SecurityParams::for_discovery();
     /// let engine_boots = security_params.engine_boots();
     /// ```
     pub fn engine_boots(&self) -> i32 {
@@ -135,7 +135,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// # let security_params = SecurityParams::discovery();
+    /// # let security_params = SecurityParams::for_discovery();
     /// let engine_time = security_params.engine_time();
     /// ```
     pub fn engine_time(&self) -> i32 {
@@ -167,7 +167,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// # let security_params = SecurityParams::discovery();
+    /// # let security_params = SecurityParams::for_discovery();
     /// let username = security_params.username();
     /// ```
     pub fn username(&self) -> &[u8] {
@@ -198,7 +198,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// # let security_params = SecurityParams::discovery();
+    /// # let security_params = SecurityParams::for_discovery();
     /// let auth_params = security_params.auth_params();
     /// ```
     pub fn auth_params(&self) -> &[u8] {
@@ -247,7 +247,7 @@ impl SecurityParams {
     /// ```
     /// use snmp_usm::SecurityParams;
     ///
-    /// # let security_params = SecurityParams::discovery();
+    /// # let security_params = SecurityParams::for_discovery();
     /// let priv_params = security_params.priv_params();
     /// ```
     pub fn priv_params(&self) -> &[u8] {

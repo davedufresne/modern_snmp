@@ -2,7 +2,7 @@ use snmp_usm::{SecurityError, SecurityParams};
 
 #[test]
 fn it_encodes_empty_security_params() {
-    let result = SecurityParams::discovery().encode();
+    let result = SecurityParams::for_discovery().encode();
     let expected = [
         0x30, 0x0E, 0x04, 0x00, 0x02, 0x01, 0x00, 0x02, 0x01, 0x00, 0x04, 0x00, 0x04, 0x00, 0x04,
         0x00,
