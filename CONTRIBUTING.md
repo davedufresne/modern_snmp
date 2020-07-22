@@ -76,10 +76,11 @@ If one patch depends on another patch in order for a change to be complete, that
 When dividing your change into a series of patches, take special care to ensure that the program builds and runs properly after each patch in the series.  Developers using "git bisect" to track down a problem can end up splitting your patch series at any point; they will not thank you if you introduce bugs in the middle.
 
 Sources:
-<https://www.kernel.org/doc/html/v4.17/process/submitting-patches.html>
-<https://github.com/torvalds/linux/pull/17#issuecomment-5659933>
-<http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html>
-<https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message>
+
+- <https://www.kernel.org/doc/html/v4.17/process/submitting-patches.html>
+- <https://github.com/torvalds/linux/pull/17#issuecomment-5659933>
+- <http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html>
+- <https://robots.thoughtbot.com/5-useful-tips-for-a-better-commit-message>
 
 ## Pull Requests
 
