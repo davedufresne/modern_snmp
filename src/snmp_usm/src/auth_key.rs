@@ -1,5 +1,5 @@
 use crate::{
-    pos_finder::PosFinder, LocalizedKey, SecurityError, SecurityParams, SecurityResult,
+    pos_finder::PosFinder, LocalizedKey, Md5, SecurityError, SecurityParams, SecurityResult, Sha1,
     AUTH_PARAMS_LEN, AUTH_PARAMS_PLACEHOLDER,
 };
 use hmac::{Hmac, Mac, NewMac};
@@ -8,6 +8,12 @@ use std::ops::Range;
 
 // Duration in seconds.
 const TIME_WINDOW: i32 = 150;
+
+/// Convenience wrapper around `Update`, `BlockInput`, `FixedOutput`, `Reset`, `Default`, and
+/// `Clone` traits. Useful as trait bound where a digest algorithm is needed.
+pub trait Digest: Update + BlockInput + FixedOutput + Reset + Default + Clone {}
+impl Digest for Md5 {}
+impl Digest for Sha1 {}
 
 /// Authentication key used to check data integrity and data origin.
 ///
@@ -135,7 +141,7 @@ impl<'a, D: 'a> AuthKey<'a, D> {
 
 impl<'a, D: 'a> AuthKey<'a, D>
 where
-    D: Update + BlockInput + FixedOutput + Reset + Default + Clone,
+    D: Digest,
 {
     /// Authenticates an incoming SNMP message.
     ///

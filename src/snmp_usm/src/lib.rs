@@ -86,7 +86,7 @@ mod pos_finder;
 mod priv_key;
 mod security_params;
 
-pub use auth_key::AuthKey;
+pub use auth_key::{AuthKey, Digest};
 pub use error::SecurityError;
 pub use localized_key::LocalizedKey;
 pub use md5::Md5;
