@@ -1,16 +1,17 @@
 use super::{PrivKey, PRIV_KEY_LEN};
 use crate::{LocalizedKey, SecurityError, SecurityParams, SecurityResult};
-use block_modes::{block_padding::Pkcs7, BlockMode, Cbc, InvalidKeyIvLength};
+use block_modes::{block_padding::NoPadding, BlockMode, Cbc, InvalidKeyIvLength};
 use des::{
     block_cipher::{generic_array::typenum::Unsigned, BlockCipher, NewBlockCipher},
     Des,
 };
 
-type DesCbc = Cbc<Des, Pkcs7>;
+type DesCbc = Cbc<Des, NoPadding>;
 
 /// Privacy key used for DES encryption.
 ///
-/// It is constructed from a [Localizedkey](struct.LocalizedKey.html).
+/// It is constructed from a [Localizedkey](struct.LocalizedKey.html). When decrypting the padding
+/// is not removed.
 ///
 /// Authentication must always be performed when encryption is requested.
 #[derive(Clone, Debug, Eq, PartialEq, Hash)]
@@ -53,8 +54,12 @@ impl<'a, D> DesPrivKey<'a, D> {
     fn add_padding_space(buf: &mut Vec<u8>) {
         let len = buf.len();
         let block_size = <Des as BlockCipher>::BlockSize::to_usize();
-        let padding_space = block_size - (len % block_size);
-        buf.resize(len + padding_space, 0);
+
+        let rem = len % block_size;
+        if rem != 0 {
+            let padding_space = block_size - rem;
+            buf.resize(len + padding_space, 0);
+        }
     }
 }
 
@@ -80,9 +85,9 @@ impl<'a, D> PrivKey for DesPrivKey<'a, D> {
 
         let cipher = self.cipher(&salt).unwrap();
 
-        let pos = scoped_pdu.len();
         Self::add_padding_space(&mut scoped_pdu);
-        cipher.encrypt(&mut scoped_pdu, pos).unwrap();
+        let len = scoped_pdu.len();
+        cipher.encrypt(&mut scoped_pdu, len).unwrap();
 
         (scoped_pdu, salt)
     }
@@ -98,14 +103,11 @@ impl<'a, D> PrivKey for DesPrivKey<'a, D> {
         }
 
         let salt = security_params.priv_params();
-        let decrypted_len = self
-            .cipher(salt)
+        self.cipher(salt)
             .map_err(|_| SecurityError::DecryptError)?
             .decrypt(&mut encrypted_scoped_pdu)
-            .map_err(|_| SecurityError::DecryptError)?
-            .len();
+            .map_err(|_| SecurityError::DecryptError)?;
 
-        encrypted_scoped_pdu.truncate(decrypted_len);
         Ok(encrypted_scoped_pdu)
     }
 }
@@ -116,7 +118,7 @@ mod tests {
     use crate::Md5;
 
     #[test]
-    fn it_adds_padding_space_if_not_multiple_of_block_size() {
+    fn it_adds_padding_if_not_multiple_of_block_size() {
         let block_size = <Des as BlockCipher>::BlockSize::to_usize();
         let mut buf = vec![0; block_size + block_size / 2];
 
@@ -125,11 +127,11 @@ mod tests {
     }
 
     #[test]
-    fn it_adds_block_size_padding_space_if_multiple_of_block_size() {
+    fn it_does_not_add_padding_if_multiple_of_block_size() {
         let block_size = <Des as BlockCipher>::BlockSize::to_usize();
         let mut buf = vec![0; block_size];
 
         DesPrivKey::<Md5>::add_padding_space(&mut buf);
-        assert_eq!(buf.len(), block_size * 2);
+        assert_eq!(buf.len(), block_size);
     }
 }
