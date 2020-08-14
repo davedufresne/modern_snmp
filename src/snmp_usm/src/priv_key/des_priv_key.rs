@@ -1,5 +1,5 @@
 use super::{PrivKey, PRIV_KEY_LEN};
-use crate::{LocalizedKey, SecurityError, SecurityParams, SecurityResult};
+use crate::{LocalizedKey, SecurityError, SecurityParams, SecurityResult, WithLocalizedKey};
 use block_modes::{block_padding::NoPadding, BlockMode, Cbc, InvalidKeyIvLength};
 use des::{
     block_cipher::{generic_array::typenum::Unsigned, BlockCipher, NewBlockCipher},
@@ -20,22 +20,6 @@ pub struct DesPrivKey<'a, D> {
 }
 
 impl<'a, D> DesPrivKey<'a, D> {
-    /// Constructs a new `DesPrivKey` using a localized key.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use snmp_usm::{DesPrivKey, LocalizedSha1Key};
-    ///
-    /// # let passwd = b"1234";
-    /// # let engine_id = b"1234";
-    /// let localized_key = LocalizedSha1Key::new(passwd, engine_id);
-    /// let priv_key = DesPrivKey::new(localized_key);
-    /// ```
-    pub fn new(localized_key: LocalizedKey<'a, D>) -> Self {
-        Self { localized_key }
-    }
-
     // Returns a DES block cipher.
     fn cipher(&self, salt: &[u8]) -> Result<DesCbc, InvalidKeyIvLength> {
         let des_key_len = <Des as NewBlockCipher>::KeySize::to_usize();
@@ -109,6 +93,12 @@ impl<'a, D> PrivKey for DesPrivKey<'a, D> {
             .map_err(|_| SecurityError::DecryptError)?;
 
         Ok(encrypted_scoped_pdu)
+    }
+}
+
+impl<'a, D> WithLocalizedKey<'a, D> for DesPrivKey<'a, D> {
+    fn with_localized_key(localized_key: LocalizedKey<'a, D>) -> Self {
+        Self { localized_key }
     }
 }
 

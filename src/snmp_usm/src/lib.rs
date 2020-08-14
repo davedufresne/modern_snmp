@@ -34,7 +34,9 @@
 //! A fictional message processing subsystem is used to clarify the examples.
 //!
 //! ```no_run
-//! use snmp_usm::{Aes128PrivKey, AuthKey, LocalizedMd5Key, PrivKey, SecurityParams};
+//! use snmp_usm::{
+//!     Aes128PrivKey, AuthKey, LocalizedMd5Key, PrivKey, SecurityParams, WithLocalizedKey
+//! };
 //!
 //! # fn main() -> snmp_usm::SecurityResult<()> {
 //! # let passwd = [];
@@ -44,7 +46,7 @@
 //! // The password and engine ID are supplied by the security subsystem.
 //! let localized_key = LocalizedMd5Key::new(&passwd, &engine_id);
 //!
-//! let priv_key = Aes128PrivKey::new(localized_key.clone());
+//! let priv_key = Aes128PrivKey::with_localized_key(localized_key.clone());
 //! # let mut security_params = SecurityParams::decode(&incoming_security_params)?;
 //! // The security parameters are constructed from the local authoritative engine data.
 //! let (encrypted_scoped_pdu, salt) = priv_key.encrypt(scoped_pdu, &security_params, 0);
@@ -88,7 +90,7 @@ mod security_params;
 
 pub use auth_key::{AuthKey, Digest};
 pub use error::SecurityError;
-pub use localized_key::LocalizedKey;
+pub use localized_key::{LocalizedKey, WithLocalizedKey};
 pub use md5::Md5;
 pub use priv_key::{Aes128PrivKey, DesPrivKey, PrivKey};
 pub use security_params::SecurityParams;

@@ -1,5 +1,6 @@
 use snmp_usm::{
     self, DesPrivKey, LocalizedMd5Key, LocalizedSha1Key, PrivKey, SecurityError, SecurityParams,
+    WithLocalizedKey,
 };
 
 const ENGINE_ID: [u8; 17] = [
@@ -9,7 +10,7 @@ const ENGINE_ID: [u8; 17] = [
 
 #[test]
 fn it_encrypts_scoped_pdu_using_localized_md5_key() {
-    let priv_key = DesPrivKey::new(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
 
     let scoped_pdu = vec![
         0x30, 0x30, 0x04, 0x11, 0x80, 0x00, 0x1F, 0x88, 0x80, 0xFA, 0xA8, 0x11, 0x60, 0x0F, 0xA2,
@@ -39,7 +40,7 @@ fn it_encrypts_scoped_pdu_using_localized_md5_key() {
 
 #[test]
 fn it_encrypts_scoped_pdu_using_localized_sha1_key() {
-    let priv_key = DesPrivKey::new(LocalizedSha1Key::new(b"87654321", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedSha1Key::new(b"87654321", &ENGINE_ID));
 
     let scoped_pdu = vec![
         0x30, 0x30, 0x04, 0x11, 0x80, 0x00, 0x1F, 0x88, 0x80, 0xFA, 0xA8, 0x11, 0x60, 0x0F, 0xA2,
@@ -69,7 +70,7 @@ fn it_encrypts_scoped_pdu_using_localized_sha1_key() {
 
 #[test]
 fn it_decrypts_scoped_pdu_using_localized_md5_key() {
-    let priv_key = DesPrivKey::new(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
 
     let encrypted_scoped_pdu = vec![
         0xA8, 0xB6, 0x99, 0x8C, 0xE0, 0xE2, 0xF7, 0x88, 0x20, 0x6B, 0x55, 0x11, 0x00, 0x17, 0x4A,
@@ -95,7 +96,7 @@ fn it_decrypts_scoped_pdu_using_localized_md5_key() {
 
 #[test]
 fn it_decrypts_scoped_pdu_using_localized_sha1_key() {
-    let priv_key = DesPrivKey::new(LocalizedSha1Key::new(b"87654321", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedSha1Key::new(b"87654321", &ENGINE_ID));
 
     let encrypted_scoped_pdu = vec![
         0x1F, 0xD0, 0x02, 0xD1, 0x7E, 0xAF, 0xDC, 0x6C, 0x00, 0xFC, 0x32, 0x44, 0x28, 0xAA, 0xFB,
@@ -139,7 +140,7 @@ fn it_decrypts_scoped_pdu_using_localized_sha1_key() {
 
 #[test]
 fn it_returns_error_for_priv_params_with_wrong_len() {
-    let priv_key = DesPrivKey::new(LocalizedSha1Key::new(b"87654321", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedSha1Key::new(b"87654321", &ENGINE_ID));
 
     let encrypted_scoped_pdu = vec![
         0x49, 0xDB, 0x95, 0xBC, 0xBF, 0xC3, 0x78, 0x60, 0xE0, 0x4B, 0x67, 0xDE, 0xD1, 0xBF, 0xED,
@@ -158,7 +159,7 @@ fn it_returns_error_for_priv_params_with_wrong_len() {
 
 #[test]
 fn it_returns_empty_vec_when_encrypting_empty_scoped_pdu() {
-    let priv_key = DesPrivKey::new(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
 
     let scoped_pdu = vec![];
 
@@ -176,7 +177,7 @@ fn it_returns_empty_vec_when_encrypting_empty_scoped_pdu() {
 
 #[test]
 fn it_returns_empty_vec_when_decrypting_empty_scoped_pdu() {
-    let priv_key = DesPrivKey::new(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
+    let priv_key = DesPrivKey::with_localized_key(LocalizedMd5Key::new(b"12345678", &ENGINE_ID));
 
     let encrypted_scoped_pdu = vec![];
     let mut security_params = SecurityParams::new();

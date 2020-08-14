@@ -32,12 +32,12 @@ pub trait PrivKey {
     ///
     /// ```
     /// # use snmp_usm::{LocalizedSha1Key, SecurityParams};
-    /// use snmp_usm::{Aes128PrivKey, PrivKey};
+    /// use snmp_usm::{Aes128PrivKey, PrivKey, WithLocalizedKey};
     ///
     /// # let scoped_pdu = b"1234".to_vec();
     /// # let security_params = SecurityParams::new();
     /// # let localized_key = LocalizedSha1Key::new(b"1234", b"1234");
-    /// let priv_key = Aes128PrivKey::new(localized_key);
+    /// let priv_key = Aes128PrivKey::with_localized_key(localized_key);
     /// let (encrypted_scoped_pdu, salt) = priv_key.encrypt(scoped_pdu, &security_params, 0);
     /// ```
     fn encrypt(
@@ -63,13 +63,13 @@ pub trait PrivKey {
     ///
     /// ```no_run
     /// # use snmp_usm::{LocalizedMd5Key, SecurityParams};
-    /// use snmp_usm::{DesPrivKey, PrivKey};
+    /// use snmp_usm::{DesPrivKey, PrivKey, WithLocalizedKey};
     ///
     /// # fn main() -> snmp_usm::SecurityResult<()> {
     /// # let encrypted_scoped_pdu = b"1234".to_vec();
     /// # let security_params = SecurityParams::new();
     /// # let localized_key = LocalizedMd5Key::new(b"1234", b"1234");
-    /// let priv_key = DesPrivKey::new(localized_key);
+    /// let priv_key = DesPrivKey::with_localized_key(localized_key);
     /// let decrypted_scoped_pdu = priv_key.decrypt(encrypted_scoped_pdu, &security_params)?;
     /// # Ok(())
     /// # }

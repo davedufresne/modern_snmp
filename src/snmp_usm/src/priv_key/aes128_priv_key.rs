@@ -1,5 +1,5 @@
 use super::{PrivKey, PRIV_KEY_LEN};
-use crate::{LocalizedKey, SecurityError, SecurityParams, SecurityResult};
+use crate::{LocalizedKey, SecurityError, SecurityParams, SecurityResult, WithLocalizedKey};
 use aes::{block_cipher::generic_array::typenum::Unsigned, Aes128};
 use cfb_mode::stream_cipher::{InvalidKeyNonceLength, NewStreamCipher, StreamCipher};
 use cfb_mode::Cfb;
@@ -17,22 +17,6 @@ pub struct Aes128PrivKey<'a, D> {
 }
 
 impl<'a, D> Aes128PrivKey<'a, D> {
-    /// Constructs a new `Aes128PrivKey` using a [Localizedkey](struct.LocalizedKey.html).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use snmp_usm::{Aes128PrivKey, LocalizedSha1Key};
-    ///
-    /// # let passwd = b"1234";
-    /// # let engine_id = b"1234";
-    /// let localized_key = LocalizedSha1Key::new(passwd, engine_id);
-    /// let priv_key = Aes128PrivKey::new(localized_key);
-    /// ```
-    pub fn new(localized_key: LocalizedKey<'a, D>) -> Self {
-        Self { localized_key }
-    }
-
     // Returns a AES-128 block cipher.
     fn cipher(
         &self,
@@ -89,5 +73,11 @@ impl<'a, D> PrivKey for Aes128PrivKey<'a, D> {
         cipher.decrypt(&mut encrypted_scoped_pdu);
 
         Ok(encrypted_scoped_pdu)
+    }
+}
+
+impl<'a, D> WithLocalizedKey<'a, D> for Aes128PrivKey<'a, D> {
+    fn with_localized_key(localized_key: LocalizedKey<'a, D>) -> Self {
+        Self { localized_key }
     }
 }

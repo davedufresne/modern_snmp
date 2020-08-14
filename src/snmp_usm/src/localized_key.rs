@@ -91,6 +91,25 @@ where
     }
 }
 
+/// Trait implemented by types created with a localized key.
+///
+/// This trait helps simplify code having to create types generically with a localized key.
+pub trait WithLocalizedKey<'a, D> {
+    /// Constructs a new type with a localized key.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use snmp_usm::{DesPrivKey, LocalizedSha1Key, WithLocalizedKey};
+    ///
+    /// # let passwd = b"12345678";
+    /// # let engine_id = b"1234";
+    /// let localized_key = LocalizedSha1Key::new(passwd, engine_id);
+    /// let priv_key = DesPrivKey::with_localized_key(localized_key);
+    /// ```
+    fn with_localized_key(localized_key: LocalizedKey<'a, D>) -> Self;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
