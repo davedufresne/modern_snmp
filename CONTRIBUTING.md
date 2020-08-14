@@ -20,7 +20,7 @@ Once the problem is established, describe what you are actually doing about it i
 
 The maintainer will thank you if you write your patch description in a form which can be easily pulled into git, as a "commit log”. Here’s a model Git commit message:
 
-> Capitalized, short (50 chars or less) summary
+> Capitalized, short (about 50 chars) summary
 >
 > More detailed explanatory text, if necessary. Wrap it to about 72
 > characters or so. In some contexts, the first line is treated as the
