@@ -20,8 +20,8 @@ impl<'a, D> Aes128PrivKey<'a, D> {
     // Returns a AES-128 block cipher.
     fn cipher(
         &self,
-        engine_boots: i32,
-        engine_time: i32,
+        engine_boots: u32,
+        engine_time: u32,
         salt: &[u8],
     ) -> Result<Aes128Cfb, InvalidKeyNonceLength> {
         let mut iv = Vec::with_capacity(<Aes128Cfb as NewStreamCipher>::NonceSize::to_usize());

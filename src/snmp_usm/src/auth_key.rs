@@ -7,7 +7,7 @@ use md5::digest::{BlockInput, FixedOutput, Reset, Update};
 use std::ops::Range;
 
 // Duration in seconds.
-const TIME_WINDOW: i32 = 150;
+const TIME_WINDOW: u32 = 150;
 
 /// Convenience wrapper around `Update`, `BlockInput`, `FixedOutput`, `Reset`, `Default`, and
 /// `Clone` traits. Useful as trait bound where a digest algorithm is needed.
@@ -75,13 +75,10 @@ impl<'a, D: 'a> AuthKey<'a, D> {
     fn validate_timeliness(
         security_params: &SecurityParams,
         local_engine_id: &[u8],
-        local_engine_boots: i32,
-        local_engine_time: i32,
+        local_engine_boots: u32,
+        local_engine_time: u32,
     ) -> SecurityResult<()> {
-        if local_engine_boots == i32::MAX
-            || local_engine_boots.is_negative()
-            || local_engine_time.is_negative()
-        {
+        if local_engine_boots >= SecurityParams::ENGINE_BOOTS_MAX {
             return Err(SecurityError::NotInTimeWindow);
         }
 
@@ -105,15 +102,15 @@ impl<'a, D: 'a> AuthKey<'a, D> {
 
     fn validate_timeliness_for_authoritative(
         security_params: &SecurityParams,
-        local_engine_boots: i32,
-        local_engine_time: i32,
+        local_engine_boots: u32,
+        local_engine_time: u32,
     ) -> SecurityResult<()> {
         if security_params.engine_boots() != local_engine_boots {
             return Err(SecurityError::NotInTimeWindow);
         }
 
-        let time_diff = security_params.engine_time() - local_engine_time;
-        if time_diff.abs() > TIME_WINDOW {
+        let time_diff = Self::diff(security_params.engine_time(), local_engine_time);
+        if time_diff > TIME_WINDOW {
             return Err(SecurityError::NotInTimeWindow);
         }
 
@@ -122,20 +119,39 @@ impl<'a, D: 'a> AuthKey<'a, D> {
 
     fn validate_timeliness_for_non_authoritative(
         security_params: &SecurityParams,
-        local_engine_boots: i32,
-        local_engine_time: i32,
+        local_engine_boots: u32,
+        local_engine_time: u32,
     ) -> SecurityResult<()> {
         if security_params.engine_boots() < local_engine_boots {
             return Err(SecurityError::NotInTimeWindow);
         }
 
         if security_params.engine_boots() == local_engine_boots
-            && local_engine_time - security_params.engine_time() > TIME_WINDOW
+            && Self::less_than_over(
+                TIME_WINDOW,
+                security_params.engine_time(),
+                local_engine_time,
+            )
         {
             return Err(SecurityError::NotInTimeWindow);
         }
 
         Ok(())
+    }
+
+    fn diff(lhs: u32, rhs: u32) -> u32 {
+        if lhs > rhs {
+            lhs - rhs
+        } else {
+            rhs - lhs
+        }
+    }
+
+    fn less_than_over(amount: u32, lhs: u32, rhs: u32) -> bool {
+        if lhs > rhs {
+            return false;
+        }
+        rhs - lhs > amount
     }
 }
 
@@ -190,8 +206,8 @@ where
         &self,
         msg: &mut [u8],
         local_engine_id: &[u8],
-        local_engine_boots: i32,
-        local_engine_time: i32,
+        local_engine_boots: u32,
+        local_engine_time: u32,
     ) -> SecurityResult<()> {
         let (security_params_range, auth_params_range) = Self::params_ranges(msg)?;
 

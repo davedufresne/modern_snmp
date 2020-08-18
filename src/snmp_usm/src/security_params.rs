@@ -1,5 +1,4 @@
 use crate::{SecurityError, SecurityResult, AUTH_PARAMS_PLACEHOLDER};
-use yasna::{ASN1Error, ASN1ErrorKind};
 
 /// Security parameters used by the User-based Security Model.
 ///
@@ -26,14 +25,38 @@ use yasna::{ASN1Error, ASN1ErrorKind};
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
 pub struct SecurityParams {
     engine_id: Vec<u8>,
-    engine_boots: i32,
-    engine_time: i32,
+    engine_boots: u32,
+    engine_time: u32,
     username: Vec<u8>,
     auth_params: Vec<u8>,
     priv_params: Vec<u8>,
 }
 
 impl SecurityParams {
+    /// The largest value for [engine_boots](#method.engine_boots).
+    ///
+    /// Whenever the local value of `engine_boots` has a value equal to or greater than
+    /// 2_147_483_647 an authenticated message always causes an
+    /// [NotInTimeWindow](enum.SecurityError.html#variant.NotInTimeWindow) authentication failure.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use snmp_usm::SecurityParams;
+    /// assert_eq!(SecurityParams::ENGINE_BOOTS_MAX, 2_147_483_647);
+    /// ```
+    pub const ENGINE_BOOTS_MAX: u32 = 2_147_483_647;
+
+    /// The largest value for [engine_time](#method.engine_time).
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use snmp_usm::SecurityParams;
+    /// assert_eq!(SecurityParams::ENGINE_TIME_MAX, 2_147_483_647);
+    /// ```
+    pub const ENGINE_TIME_MAX: u32 = 2_147_483_647;
+
     /// Alias for [for_discovery](#method.for_discovery).
     pub fn new() -> Self {
         Self::default()
@@ -106,13 +129,14 @@ impl SecurityParams {
     /// # let security_params = SecurityParams::for_discovery();
     /// let engine_boots = security_params.engine_boots();
     /// ```
-    pub fn engine_boots(&self) -> i32 {
+    pub fn engine_boots(&self) -> u32 {
         self.engine_boots
     }
 
     /// Sets the authoritative engine's boots.
     ///
-    /// The value cannot be negative. If `engine_boots` less than 0 it defaults to 0.
+    /// The value should not be larger than
+    /// [ENGINE_BOOTS_MAX](#associatedconstant.ENGINE_BOOTS_MAX).
     ///
     /// # Examples
     ///
@@ -123,8 +147,8 @@ impl SecurityParams {
     /// security_params.set_engine_boots(1);
     /// assert_eq!(security_params.engine_boots(), 1);
     /// ```
-    pub fn set_engine_boots(&mut self, engine_boots: i32) -> &mut Self {
-        self.engine_boots = if engine_boots < 0 { 0 } else { engine_boots };
+    pub fn set_engine_boots(&mut self, engine_boots: u32) -> &mut Self {
+        self.engine_boots = engine_boots;
         self
     }
 
@@ -138,13 +162,14 @@ impl SecurityParams {
     /// # let security_params = SecurityParams::for_discovery();
     /// let engine_time = security_params.engine_time();
     /// ```
-    pub fn engine_time(&self) -> i32 {
+    pub fn engine_time(&self) -> u32 {
         self.engine_time
     }
 
     /// Sets the authoritative engine's time.
     ///
-    /// The value cannot be negative. If `engine_time` less than 0 it defaults to 0.
+    /// The value should not be larger than
+    /// [ENGINE_TIME_MAX](#associatedconstant.ENGINE_TIME_MAX).
     ///
     /// # Examples
     ///
@@ -155,8 +180,8 @@ impl SecurityParams {
     /// security_params.set_engine_boots(1);
     /// assert_eq!(security_params.engine_boots(), 1);
     /// ```
-    pub fn set_engine_time(&mut self, engine_time: i32) -> &mut Self {
-        self.engine_time = if engine_time < 0 { 0 } else { engine_time };
+    pub fn set_engine_time(&mut self, engine_time: u32) -> &mut Self {
+        self.engine_time = engine_time;
         self
     }
 
@@ -288,8 +313,8 @@ impl SecurityParams {
         yasna::construct_der(|writer| {
             writer.write_sequence(|writer| {
                 writer.next().write_bytes(&self.engine_id);
-                writer.next().write_i32(self.engine_boots);
-                writer.next().write_i32(self.engine_time);
+                writer.next().write_u32(self.engine_boots);
+                writer.next().write_u32(self.engine_time);
                 writer.next().write_bytes(&self.username);
                 writer.next().write_bytes(&self.auth_params);
                 writer.next().write_bytes(&self.priv_params);
@@ -327,13 +352,8 @@ impl SecurityParams {
         let result = yasna::parse_ber(buf, |reader| {
             reader.read_sequence(|reader| {
                 let engine_id = reader.next().read_bytes()?;
-
-                let engine_boots = reader.next().read_i32()?;
-                let engine_time = reader.next().read_i32()?;
-                if engine_boots < 0 || engine_time < 0 {
-                    return Err(ASN1Error::new(ASN1ErrorKind::Invalid));
-                }
-
+                let engine_boots = reader.next().read_u32()?;
+                let engine_time = reader.next().read_u32()?;
                 let username = reader.next().read_bytes()?;
                 let auth_params = reader.next().read_bytes()?;
                 let priv_params = reader.next().read_bytes()?;
@@ -350,26 +370,5 @@ impl SecurityParams {
         });
 
         result.map_err(|_| SecurityError::MalformedSecurityParams)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_sets_engine_boots_to_0_when_negative() {
-        let mut security_params = SecurityParams::new();
-        security_params.set_engine_boots(-1);
-
-        assert_eq!(security_params.engine_boots(), 0);
-    }
-
-    #[test]
-    fn it_sets_engine_time_to_0_when_negative() {
-        let mut security_params = SecurityParams::new();
-        security_params.set_engine_time(-1);
-
-        assert_eq!(security_params.engine_time(), 0);
     }
 }
