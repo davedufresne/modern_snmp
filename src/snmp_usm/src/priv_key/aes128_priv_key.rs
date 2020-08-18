@@ -35,7 +35,7 @@ impl<'a, D> Aes128PrivKey<'a, D> {
 }
 
 impl<'a, D> PrivKey for Aes128PrivKey<'a, D> {
-    type Salt = i64;
+    type Salt = u64;
 
     // Encrypts a scoped PDU using AES-128.
     fn encrypt(

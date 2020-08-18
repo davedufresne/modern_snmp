@@ -48,7 +48,7 @@ impl<'a, D> DesPrivKey<'a, D> {
 }
 
 impl<'a, D> PrivKey for DesPrivKey<'a, D> {
-    type Salt = i32;
+    type Salt = u32;
 
     // Encrypts a scoped PDU using DES.
     fn encrypt(
