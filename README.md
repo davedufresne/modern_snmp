@@ -8,6 +8,7 @@ SNMP is an Internet Standard protocol for collecting and organizing information 
 
 | Name | Crate Name | crates.io | Docs | Build Status |
 |------|------------|-----------|------|--------------|
+|SNMP MP|snmp_mp|[![crates.io](https://img.shields.io/crates/v/snmp_mp.svg)](https://crates.io/crates/snmp_mp)|[![Documentation](https://docs.rs/snmp_mp/badge.svg)](https://docs.rs/snmp_mp)|[![Build Status](https://travis-ci.org/davedufresne/modern_snmp.svg?branch=master)](https://travis-ci.org/davedufresne/modern_snmp)|
 |SNMP USM|snmp_usm|[![crates.io](https://img.shields.io/crates/v/snmp_usm.svg)](https://crates.io/crates/snmp_usm)|[![Documentation](https://docs.rs/snmp_usm/badge.svg)](https://docs.rs/snmp_usm)|[![Build Status](https://travis-ci.org/davedufresne/modern_snmp.svg?branch=master)](https://travis-ci.org/davedufresne/modern_snmp)|
 
 ## License
