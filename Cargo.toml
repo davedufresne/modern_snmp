@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "src/msnmp",
   "src/snmp_mp",
   "src/snmp_usm",
 ]
