@@ -54,7 +54,7 @@ where
         var_bind = vec![VarBind::new(base_oid)];
     }
 
-    let end_oid = &next_sibling(&var_bind[0].name());
+    let end_oid = &next_sibling(var_bind[0].name());
     loop {
         let mut get_next_request =
             msg_factory::create_request_msg(PduType::GetNextRequest, var_bind, session);

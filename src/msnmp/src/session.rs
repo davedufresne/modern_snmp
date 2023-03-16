@@ -151,7 +151,7 @@ where
         let security_params = SecurityParams::decode(discovery_response.security_params())?;
         session
             .set_username(username)
-            .set_engine_id(&security_params.engine_id())
+            .set_engine_id(security_params.engine_id())
             .set_engine_boots(security_params.engine_boots())
             .set_engine_time(security_params.engine_time());
 
