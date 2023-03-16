@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 (2023-03-15)
+
+* Bump 'aes' and 'cfb-mode' versions
+
 ## 0.2.0 (2020-08-27)
 
 * Rename `SecurityParams::discovery()` to `SecurityParams::for_discovery()`.
