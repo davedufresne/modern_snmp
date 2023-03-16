@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/snmp_usm/0.2.0")]
+#![doc(html_root_url = "https://docs.rs/snmp_usm/0.2.1")]
 
 //! # Implementation of the User-based Security Model (USM) for SNMPv3
 //!

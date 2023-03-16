@@ -1,10 +1,11 @@
 use super::{PrivKey, PRIV_KEY_LEN};
 use crate::{LocalizedKey, SecurityError, SecurityParams, SecurityResult, WithLocalizedKey};
-use aes::{block_cipher::generic_array::typenum::Unsigned, Aes128};
-use cfb_mode::stream_cipher::{InvalidKeyNonceLength, NewStreamCipher, StreamCipher};
-use cfb_mode::Cfb;
+use aes::cipher::{AsyncStreamCipher, IvSizeUser, KeyIvInit};
+use aes::Aes128;
+use cfb_mode::{Decryptor, Encryptor};
 
-type Aes128Cfb = Cfb<Aes128>;
+type Aes128CfbEnc = Encryptor<Aes128>;
+type Aes128CfbDec = Decryptor<Aes128>;
 
 /// Privacy key used for AES-128 encryption.
 ///
@@ -17,20 +18,18 @@ pub struct Aes128PrivKey<'a, D> {
 }
 
 impl<'a, D> Aes128PrivKey<'a, D> {
-    // Returns a AES-128 block cipher.
-    fn cipher(
-        &self,
-        engine_boots: u32,
-        engine_time: u32,
-        salt: &[u8],
-    ) -> Result<Aes128Cfb, InvalidKeyNonceLength> {
-        let mut iv = Vec::with_capacity(<Aes128Cfb as NewStreamCipher>::NonceSize::to_usize());
+    fn iv(&self, engine_boots: u32, engine_time: u32, salt: &[u8]) -> Vec<u8> {
+        let mut iv = Vec::with_capacity(<Aes128CfbEnc as IvSizeUser>::iv_size());
         iv.extend_from_slice(&engine_boots.to_be_bytes());
         iv.extend_from_slice(&engine_time.to_be_bytes());
         iv.extend_from_slice(&salt);
 
+        iv
+    }
+
+    fn key(&self) -> &[u8] {
         let key = self.localized_key.bytes();
-        Aes128Cfb::new_var(&key[..PRIV_KEY_LEN], &iv)
+        &key[..PRIV_KEY_LEN]
     }
 }
 
@@ -45,14 +44,13 @@ impl<'a, D> PrivKey for Aes128PrivKey<'a, D> {
         salt: Self::Salt,
     ) -> (Vec<u8>, Vec<u8>) {
         let salt = salt.to_be_bytes();
-        let mut cipher = self
-            .cipher(
-                security_params.engine_boots(),
-                security_params.engine_time(),
-                &salt,
-            )
-            .unwrap();
-        cipher.encrypt(&mut scoped_pdu);
+        let iv = self.iv(
+            security_params.engine_boots(),
+            security_params.engine_time(),
+            &salt,
+        );
+        let encryptor = Aes128CfbEnc::new_from_slices(self.key(), &iv).unwrap();
+        encryptor.encrypt(&mut scoped_pdu);
 
         (scoped_pdu, salt.to_vec())
     }
@@ -63,14 +61,14 @@ impl<'a, D> PrivKey for Aes128PrivKey<'a, D> {
         mut encrypted_scoped_pdu: Vec<u8>,
         security_params: &SecurityParams,
     ) -> SecurityResult<Vec<u8>> {
-        let mut cipher = self
-            .cipher(
-                security_params.engine_boots(),
-                security_params.engine_time(),
-                &security_params.priv_params(),
-            )
+        let iv = self.iv(
+            security_params.engine_boots(),
+            security_params.engine_time(),
+            &security_params.priv_params(),
+        );
+        let decryptor = Aes128CfbDec::new_from_slices(self.key(), &iv)
             .map_err(|_| SecurityError::DecryptError)?;
-        cipher.decrypt(&mut encrypted_scoped_pdu);
+        decryptor.decrypt(&mut encrypted_scoped_pdu);
 
         Ok(encrypted_scoped_pdu)
     }
