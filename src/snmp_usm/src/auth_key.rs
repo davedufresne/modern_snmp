@@ -85,13 +85,13 @@ impl<'a, D: 'a> AuthKey<'a, D> {
         let is_authoritative_engine = security_params.engine_id() == local_engine_id;
         if is_authoritative_engine {
             Self::validate_timeliness_for_authoritative(
-                &security_params,
+                security_params,
                 local_engine_boots,
                 local_engine_time,
             )?;
         } else {
             Self::validate_timeliness_for_non_authoritative(
-                &security_params,
+                security_params,
                 local_engine_boots,
                 local_engine_time,
             )?;
@@ -268,7 +268,7 @@ where
 
     // Calculates the HMAC of the SNMP message.
     fn hmac(&self, msg: &[u8]) -> Vec<u8> {
-        let mut mac = Hmac::<D>::new_varkey(&self.localized_key.bytes()).unwrap();
+        let mut mac = Hmac::<D>::new_varkey(self.localized_key.bytes()).unwrap();
 
         mac.update(msg);
         let result = mac.finalize();

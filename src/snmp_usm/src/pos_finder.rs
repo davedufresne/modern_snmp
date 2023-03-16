@@ -123,7 +123,7 @@ impl<'a> PosFinder<'a> {
             for _ in 0..(len_byte & LONG_FORM_LEN_MASK) {
                 let part = len
                     .checked_mul(INTEGER_BASE)
-                    .ok_or_else(|| SecurityError::MalformedMsg)?;
+                    .ok_or(SecurityError::MalformedMsg)?;
                 len = part + self.read_u8()? as usize;
             }
 

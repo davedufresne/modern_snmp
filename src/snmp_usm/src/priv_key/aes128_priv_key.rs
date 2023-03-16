@@ -22,7 +22,7 @@ impl<'a, D> Aes128PrivKey<'a, D> {
         let mut iv = Vec::with_capacity(<Aes128CfbEnc as IvSizeUser>::iv_size());
         iv.extend_from_slice(&engine_boots.to_be_bytes());
         iv.extend_from_slice(&engine_time.to_be_bytes());
-        iv.extend_from_slice(&salt);
+        iv.extend_from_slice(salt);
 
         iv
     }
@@ -64,7 +64,7 @@ impl<'a, D> PrivKey for Aes128PrivKey<'a, D> {
         let iv = self.iv(
             security_params.engine_boots(),
             security_params.engine_time(),
-            &security_params.priv_params(),
+            security_params.priv_params(),
         );
         let decryptor = Aes128CfbDec::new_from_slices(self.key(), &iv)
             .map_err(|_| SecurityError::DecryptError)?;
