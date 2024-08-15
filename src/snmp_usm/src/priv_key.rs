@@ -1,8 +1,8 @@
-mod aes128_priv_key;
+mod aes_priv_key;
 mod des_priv_key;
 
 use crate::{SecurityParams, SecurityResult};
-pub use aes128_priv_key::Aes128PrivKey;
+pub use aes_priv_key::AesPrivKey;
 pub use des_priv_key::DesPrivKey;
 
 const PRIV_KEY_LEN: usize = 16;

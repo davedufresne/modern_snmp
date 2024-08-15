@@ -92,7 +92,7 @@ pub use auth_key::{AuthKey, Digest};
 pub use error::SecurityError;
 pub use localized_key::{LocalizedKey, WithLocalizedKey};
 pub use md5::Md5;
-pub use priv_key::{Aes128PrivKey, DesPrivKey, PrivKey};
+pub use priv_key::{AesPrivKey, DesPrivKey, PrivKey};
 pub use security_params::SecurityParams;
 pub use sha1::Sha1;
 
@@ -108,6 +108,11 @@ pub type Sha1AuthKey<'a> = AuthKey<'a, Sha1>;
 
 /// Type alias for the result of a security operation.
 pub type SecurityResult<T> = Result<T, SecurityError>;
+
+// Type alias for all AES privacy keys
+pub type Aes128PrivKey<'a, D> = AesPrivKey<'a, D, 128>;
+pub type Aes192PrivKey<'a, D> = AesPrivKey<'a, D, 192>;
+pub type Aes256PrivKey<'a, D> = AesPrivKey<'a, D, 256>;
 
 const AUTH_PARAMS_LEN: usize = 12;
 const AUTH_PARAMS_PLACEHOLDER: [u8; AUTH_PARAMS_LEN] = [0x0; AUTH_PARAMS_LEN];

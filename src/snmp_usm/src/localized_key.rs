@@ -23,10 +23,15 @@ const PASSWD_BUF_LEN: usize = 64;
 pub struct LocalizedKey<'a, D> {
     bytes: Vec<u8>,
     _digest_type: PhantomData<&'a D>,
+    orig_len: usize,
 }
 
 impl<'a, D> LocalizedKey<'a, D> {
     pub(crate) fn bytes(&self) -> &[u8] {
+        &self.bytes[..self.orig_len]
+    }
+
+    pub(crate) fn bytes_full(&self) -> &[u8] {
         &self.bytes
     }
 }
@@ -51,11 +56,25 @@ where
     /// let key = LocalizedMd5Key::new(b"password", b"engine_id");
     /// ```
     pub fn new(passwd: &[u8], engine_id: &[u8]) -> Self {
-        let bytes = Self::key_from_passwd(passwd, engine_id);
+        let mut bytes = vec![];
+
+        let mut len = None;
+
+        while bytes.len() < 32 {
+            let mut data =
+                Self::key_from_passwd(if bytes.len() == 0 { passwd } else { &bytes }, engine_id);
+
+            if len.is_none() {
+                len = Some(data.len())
+            }
+
+            bytes.append(&mut data);
+        }
 
         Self {
             bytes,
             _digest_type: PhantomData,
+            orig_len: len.expect("No bytes generated"),
         }
     }
 
