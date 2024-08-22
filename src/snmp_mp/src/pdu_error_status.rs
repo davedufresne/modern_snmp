@@ -26,8 +26,9 @@ const INCONSISTENT_NAME: isize = 18;
 ///
 /// A non-zero value of the error-status field in a Response-PDU is used to indicate that an error
 /// occurred to prevent the processing of the request.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum PduErrorStatus {
+    #[default]
     NoError = NO_ERROR,
     TooBig = TOO_BIG,
     NoSuchName = NO_SUCH_NAME,
@@ -47,12 +48,6 @@ pub enum PduErrorStatus {
     AuthorizationError = AUTHORIZATION_ERROR,
     NotWritable = NOT_WRITABLE,
     InconsistentName = INCONSISTENT_NAME,
-}
-
-impl Default for PduErrorStatus {
-    fn default() -> Self {
-        PduErrorStatus::NoError
-    }
 }
 
 /// Error returned when the conversion from `u8` to `PduErrorStatus` fails.

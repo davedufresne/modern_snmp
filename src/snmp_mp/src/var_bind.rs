@@ -189,7 +189,7 @@ impl VarBind {
 ///
 /// let var_value = VarValue::Int(1);
 /// ```
-#[derive(Clone, Debug, Eq, PartialEq, Hash)]
+#[derive(Default, Clone, Debug, Eq, PartialEq, Hash)]
 pub enum VarValue {
     /// The Integer32 type represents integer-valued information between -2^31 and 2^31-1 inclusive
     /// (-2_147_483_648 to 2_147_483_647 decimal).
@@ -221,6 +221,7 @@ pub enum VarValue {
     /// its value. In this case, the value portion of the variable binding is ignored by the
     /// receiving SNMP entity. The `UnSpecified` value is defined for use as the value portion of
     /// such bindings.
+    #[default]
     Unspecified,
     /// If a variable binding's name does not have an object identifier prefix which exactly matches
     /// any variable, then its value is set to `NoSuchObject`.
@@ -375,12 +376,6 @@ impl VarValue {
         };
 
         Ok(value)
-    }
-}
-
-impl Default for VarValue {
-    fn default() -> Self {
-        VarValue::Unspecified
     }
 }
 

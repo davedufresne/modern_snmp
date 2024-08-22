@@ -45,9 +45,9 @@ pub fn run(params: Params) -> Result<(), Error> {
     }
 }
 
-fn execute_request<'a, D: 'a, P, S>(params: Params, salt: P::Salt) -> Result<(), Error>
+fn execute_request<'a, D, P, S>(params: Params, salt: P::Salt) -> Result<(), Error>
 where
-    D: Digest,
+    D: Digest + 'a,
     P: PrivKey<Salt = S> + WithLocalizedKey<'a, D>,
     S: Step + Copy,
 {

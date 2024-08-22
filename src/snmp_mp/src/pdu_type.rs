@@ -15,8 +15,9 @@ const REPORT_TAG_NUM: u64 = 8;
 /// Represents a PDU type.
 ///
 /// PDU types are encoded as implicit tags.
-#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+#[derive(Default, Debug, Copy, Clone, Eq, PartialEq, Hash)]
 pub enum PduType {
+    #[default]
     GetRequest = GET_REQUEST_TAG_NUM as isize,
     GetNextRequest = GET_NEXT_REQUEST_TAG_NUM as isize,
     Response = RESPONSE_TAG_NUM as isize,
@@ -25,12 +26,6 @@ pub enum PduType {
     InformRequest = INFORM_REQUEST_TAG_NUM as isize,
     SnmpTrap = SNMP_TRAP_TAG_NUM as isize,
     Report = REPORT_TAG_NUM as isize,
-}
-
-impl Default for PduType {
-    fn default() -> Self {
-        PduType::GetRequest
-    }
 }
 
 /// Error returned when the conversion from `u64` to `PduType` fails.

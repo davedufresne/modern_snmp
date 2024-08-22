@@ -399,7 +399,7 @@ impl SnmpMsg {
     {
         match self.scoped_pdu_data {
             ScopedPduData::Encrypted(ref mut encrypted_scoped_pdu) => {
-                let encrypted_scoped_pdu = mem::replace(encrypted_scoped_pdu, vec![]);
+                let encrypted_scoped_pdu = mem::take(encrypted_scoped_pdu);
 
                 let encoded_scoped_pdu = decrypt(encrypted_scoped_pdu);
                 match encoded_scoped_pdu {
@@ -438,7 +438,7 @@ impl SnmpMsg {
     fn encode_scoped_pdu_data(&self, writer: DERWriter) {
         match &self.scoped_pdu_data {
             ScopedPduData::Plaintext(ref scoped_pdu) => writer.write_der(&scoped_pdu.encode()),
-            ScopedPduData::Encrypted(ciphertext) => writer.write_bytes(&ciphertext),
+            ScopedPduData::Encrypted(ciphertext) => writer.write_bytes(ciphertext),
         }
     }
 
