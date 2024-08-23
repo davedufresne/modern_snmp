@@ -13,6 +13,7 @@ use std::marker::PhantomData;
 
 const ONE_MEGABYTE: usize = 1_048_576;
 const PASSWD_BUF_LEN: usize = 64;
+const AES_256_KEY_LEN: usize = 32;
 
 /// Localized key used to verify the identity of users, verify the integrity of messages and
 /// encrypt messages.
@@ -60,9 +61,9 @@ where
 
         let mut len = None;
 
-        while bytes.len() < 32 {
+        while bytes.len() < AES_256_KEY_LEN {
             let mut data =
-                Self::key_from_passwd(if bytes.len() == 0 { passwd } else { &bytes }, engine_id);
+                Self::key_from_passwd(if bytes.is_empty() { passwd } else { &bytes }, engine_id);
 
             if len.is_none() {
                 len = Some(data.len())
