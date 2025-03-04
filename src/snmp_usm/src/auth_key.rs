@@ -1,6 +1,6 @@
 use crate::{
     pos_finder::PosFinder, LocalizedKey, Md5, SecurityError, SecurityParams, SecurityResult, Sha1,
-    AUTH_PARAMS_LEN, AUTH_PARAMS_PLACEHOLDER,
+    Sha256, Sha512,
 };
 use hmac::{Hmac, Mac, NewMac};
 use md5::digest::{BlockInput, FixedOutput, Reset, Update};
@@ -11,9 +11,32 @@ const TIME_WINDOW: u32 = 150;
 
 /// Convenience wrapper around `Update`, `BlockInput`, `FixedOutput`, `Reset`, `Default`, and
 /// `Clone` traits. Useful as trait bound where a digest algorithm is needed.
-pub trait Digest: Update + BlockInput + FixedOutput + Reset + Default + Clone {}
-impl Digest for Md5 {}
-impl Digest for Sha1 {}
+pub trait Digest: Update + BlockInput + FixedOutput + Reset + Default + Clone {
+    const AUTH_PARAMS_LEN: usize;
+    const AUTH_PARAMS_PLACEHOLDER: &'static [u8];
+}
+
+impl Digest for Md5 {
+    const AUTH_PARAMS_LEN: usize = 12;
+    const AUTH_PARAMS_PLACEHOLDER: &'static [u8] = &[0u8; Self::AUTH_PARAMS_LEN];
+}
+
+impl Digest for Sha1 {
+    const AUTH_PARAMS_LEN: usize = 12;
+    const AUTH_PARAMS_PLACEHOLDER: &'static [u8] = &[0u8; Self::AUTH_PARAMS_LEN];
+}
+
+// RFC 7630 specify tag lens for Sha224, Sha256, Sha384, Sha512
+// https://datatracker.ietf.org/doc/html/rfc7630
+impl Digest for Sha256 {
+    const AUTH_PARAMS_LEN: usize = 24;
+    const AUTH_PARAMS_PLACEHOLDER: &'static [u8] = &[0u8; Self::AUTH_PARAMS_LEN];
+}
+
+impl Digest for Sha512 {
+    const AUTH_PARAMS_LEN: usize = 48;
+    const AUTH_PARAMS_PLACEHOLDER: &'static [u8] = &[0u8; Self::AUTH_PARAMS_LEN];
+}
 
 /// Authentication key used to check data integrity and data origin.
 ///
@@ -39,27 +62,6 @@ impl<'a, D: 'a> AuthKey<'a, D> {
     /// ```
     pub fn new(localized_key: LocalizedKey<'a, D>) -> Self {
         Self { localized_key }
-    }
-
-    // Returns the security parameters and authentication parameters ranges of an SNMP message.
-    fn params_ranges(msg: &[u8]) -> SecurityResult<(Range<usize>, Range<usize>)> {
-        let mut pos_finder = PosFinder::new(msg);
-
-        pos_finder.step_into_seq()?; // Message sequence
-        pos_finder.skip_int()?; // Version
-        pos_finder.skip_seq()?; // Header data
-                                // Security parameters as octet string
-        let security_params_range = pos_finder.step_into_octet_str()?;
-
-        let auth_params_range = Self::find_auth_params_range(&mut pos_finder)
-            .map_err(|_| SecurityError::MalformedSecurityParams)?;
-
-        let auth_params_len = auth_params_range.end - auth_params_range.start;
-        if auth_params_len != AUTH_PARAMS_LEN {
-            return Err(SecurityError::WrongAuthParams);
-        }
-
-        Ok((security_params_range, auth_params_range))
     }
 
     fn find_auth_params_range(pos_finder: &mut PosFinder) -> SecurityResult<Range<usize>> {
@@ -159,6 +161,27 @@ impl<'a, D: 'a> AuthKey<'a, D>
 where
     D: Digest,
 {
+    // Returns the security parameters and authentication parameters ranges of an SNMP message.
+    fn params_ranges(msg: &[u8]) -> SecurityResult<(Range<usize>, Range<usize>)> {
+        let mut pos_finder = PosFinder::new(msg);
+
+        pos_finder.step_into_seq()?; // Message sequence
+        pos_finder.skip_int()?; // Version
+        pos_finder.skip_seq()?; // Header data
+                                // Security parameters as octet string
+        let security_params_range = pos_finder.step_into_octet_str()?;
+
+        let auth_params_range = Self::find_auth_params_range(&mut pos_finder)
+            .map_err(|_| SecurityError::MalformedSecurityParams)?;
+
+        let auth_params_len = auth_params_range.end - auth_params_range.start;
+        if auth_params_len != D::AUTH_PARAMS_LEN {
+            return Err(SecurityError::WrongAuthParams);
+        }
+
+        Ok((security_params_range, auth_params_range))
+    }
+
     /// Authenticates an incoming SNMP message.
     ///
     /// The timeliness check is always preformed when authentication is requested. If the
@@ -211,11 +234,11 @@ where
     ) -> SecurityResult<()> {
         let (security_params_range, auth_params_range) = Self::params_ranges(msg)?;
 
-        let mut saved_auth_params: [u8; AUTH_PARAMS_LEN] = [0x0; AUTH_PARAMS_LEN];
+        let mut saved_auth_params = vec![0u8; D::AUTH_PARAMS_LEN];
         saved_auth_params.copy_from_slice(&msg[auth_params_range.start..auth_params_range.end]);
 
         msg[auth_params_range.start..auth_params_range.end]
-            .copy_from_slice(&AUTH_PARAMS_PLACEHOLDER);
+            .copy_from_slice(D::AUTH_PARAMS_PLACEHOLDER);
         let auth_params = self.hmac(msg);
         if saved_auth_params != auth_params[..] {
             return Err(SecurityError::WrongAuthParams);
@@ -274,6 +297,6 @@ where
         let result = mac.finalize();
         let bytes = result.into_bytes();
 
-        bytes[0..AUTH_PARAMS_LEN].to_vec()
+        bytes[0..D::AUTH_PARAMS_LEN].to_vec()
     }
 }

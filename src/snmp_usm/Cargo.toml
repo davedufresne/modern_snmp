@@ -1,7 +1,7 @@
 [package]
 name = "snmp_usm"
 description = "Implementation of the User-based Security Model (USM) for Simple Network Management Protocol (SNMP) version 3."
-version = "0.2.1" # remember to update html_root_url
+version = "0.3.0" # remember to update html_root_url
 authors = ["David Dufresne <davedufresne@gmail.com>"]
 license = "MIT OR Apache-2.0"
 edition = "2018"
@@ -18,4 +18,5 @@ des = "0.4.0"
 hmac = "0.8.1"
 md-5 = "0.9.1"
 sha-1 = "0.9.1"
+sha2 = "0.9.1"
 yasna = "0.3.2"

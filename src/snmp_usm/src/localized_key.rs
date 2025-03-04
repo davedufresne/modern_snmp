@@ -27,6 +27,12 @@ pub struct LocalizedKey<'a, D> {
     orig_len: usize,
 }
 
+pub enum ExtensionVariant {
+    // Based on 3.1.2.1 from draft-blumenthal-aes-usm-04.txt
+    Blumenthal,
+    Cisco,
+}
+
 impl<'a, D> LocalizedKey<'a, D> {
     pub(crate) fn bytes(&self) -> &[u8] {
         &self.bytes[..self.orig_len]
@@ -45,6 +51,8 @@ where
     ///
     /// The password should be at least 8 characters in length.
     ///
+    /// This is equivalent to calling new_with_extension_variant with ExtensionVariant::Blumenthal
+    ///
     /// # Panics
     ///
     /// Panics if `passwd` has length 0.
@@ -57,25 +65,52 @@ where
     /// let key = LocalizedMd5Key::new(b"password", b"engine_id");
     /// ```
     pub fn new(passwd: &[u8], engine_id: &[u8]) -> Self {
-        let mut bytes = vec![];
+        Self::new_with_extension_variant(passwd, engine_id, ExtensionVariant::Blumenthal)
+    }
 
-        let mut len = None;
+    /// Creates a key from a user password, an authoritative engine ID and key extension variant.
+    ///
+    /// The password should be at least 8 characters in length.
+    ///
+    /// The key extension is only used for Aes192PrivKey and Aes256PrivKey if the digest output is
+    /// not enough (e.g: Md5, Sha1)
+    ///
+    /// # Panics
+    ///
+    /// Panics if `passwd` has length 0.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use snmp_usm::{LocalizedMd5Key, ExtensionVariant};
+    ///
+    /// let key = LocalizedMd5Key::new_with_extension_variant(b"password", b"engine_id", ExtensionVariant::Cisco);
+    /// ```
+    pub fn new_with_extension_variant(passwd: &[u8], engine_id: &[u8], variant: ExtensionVariant) -> Self {
+        let mut bytes = Self::key_from_passwd(passwd, engine_id);
+
+        let orig_len = bytes.len();
 
         while bytes.len() < AES_256_KEY_LEN {
-            let mut data =
-                Self::key_from_passwd(if bytes.is_empty() { passwd } else { &bytes }, engine_id);
+            let extra_bytes = match variant {
+                ExtensionVariant::Blumenthal => {
+                    let mut hashing_fn = D::default();
 
-            if len.is_none() {
-                len = Some(data.len())
-            }
+                    hashing_fn.update(&bytes);
 
-            bytes.append(&mut data);
+                    hashing_fn.finalize_reset().to_vec()
+                }
+
+                ExtensionVariant::Cisco => Self::key_from_passwd(&bytes, engine_id),
+            };
+
+            bytes.extend_from_slice(&extra_bytes);
         }
 
         Self {
             bytes,
             _digest_type: PhantomData,
-            orig_len: len.expect("No bytes generated"),
+            orig_len,
         }
     }
 
@@ -135,6 +170,7 @@ mod tests {
     use super::*;
     use md5::Md5;
     use sha1::Sha1;
+    use sha2::{Sha256, Sha512};
 
     #[test]
     fn it_constructs_localized_key_with_md5() {
@@ -157,6 +193,35 @@ mod tests {
             0x66, 0x95, 0xfe, 0xbc, 0x92, 0x88, 0xe3, 0x62, 0x82, 0x23, 0x5f, 0xc7, 0x15, 0x1f,
             0x12, 0x84, 0x97, 0xb3, 0x8f, 0x3f,
         ];
+        assert_eq!(result.bytes(), expected);
+    }
+
+    #[test]
+    fn it_constructs_localized_key_with_sha256() {
+        let engine_id = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x02];
+        let result = LocalizedKey::<Sha256>::new(b"maplesyrup", &engine_id);
+
+        let expected = [
+            0x89, 0x82, 0xE0, 0xE5, 0x49, 0xE8, 0x66, 0xDB, 0x36, 0x1A, 0x6B, 0x62, 0x5D, 0x84,
+            0xCC, 0xCC, 0x11, 0x16, 0x2D, 0x45, 0x3E, 0xE8, 0xCE, 0x3A, 0x64, 0x45, 0xC2, 0xD6,
+            0x77, 0x6F, 0x0F, 0x8B,
+        ];
+        assert_eq!(result.bytes(), expected);
+    }
+
+    #[test]
+    fn it_constructs_localized_key_with_sha512() {
+        let engine_id = [0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x02];
+        let result = LocalizedKey::<Sha512>::new(b"maplesyrup", &engine_id);
+
+        let expected = [
+            0x22, 0xA5, 0xA3, 0x6C, 0xED, 0xFC, 0xC0, 0x85, 0x80, 0x7A, 0x12, 0x8D, 0x7B, 0xC6,
+            0xC2, 0x38, 0x21, 0x67, 0xAD, 0x6C, 0x0D, 0xBC, 0x5F, 0xDF, 0xF8, 0x56, 0x74, 0x0F,
+            0x3D, 0x84, 0xC0, 0x99, 0xAD, 0x1E, 0xA8, 0x7A, 0x8D, 0xB0, 0x96, 0x71, 0x4D, 0x97,
+            0x88, 0xBD, 0x54, 0x40, 0x47, 0xC9, 0x02, 0x1E, 0x42, 0x29, 0xCE, 0x27, 0xE4, 0xC0,
+            0xA6, 0x92, 0x50, 0xAD, 0xFC, 0xFF, 0xBB, 0x0B,
+        ];
+
         assert_eq!(result.bytes(), expected);
     }
 

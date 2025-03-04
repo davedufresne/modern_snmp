@@ -1,4 +1,4 @@
-use crate::{SecurityError, SecurityResult, AUTH_PARAMS_PLACEHOLDER};
+use crate::{Digest, SecurityError, SecurityResult};
 
 /// Security parameters used by the User-based Security Model.
 ///
@@ -15,12 +15,12 @@ use crate::{SecurityError, SecurityResult, AUTH_PARAMS_PLACEHOLDER};
 /// # Examples
 ///
 /// ```
-/// use snmp_usm::SecurityParams;
+/// use snmp_usm::{SecurityParams, Sha1};
 ///
 /// let mut security_params = SecurityParams::new();
 /// security_params.set_username(b"username")
 ///     .set_priv_params(b"saltsalt")
-///     .set_auth_params_placeholder();
+///     .set_auth_params_placeholder::<Sha1>();
 /// ```
 #[derive(Debug, Clone, Default, Eq, PartialEq, Hash)]
 pub struct SecurityParams {
@@ -252,14 +252,14 @@ impl SecurityParams {
     /// # Examples
     ///
     /// ```
-    /// use snmp_usm::SecurityParams;
+    /// use snmp_usm::{SecurityParams, Sha1};
     ///
     /// let mut security_params = SecurityParams::new();
-    /// security_params.set_auth_params_placeholder();
+    /// security_params.set_auth_params_placeholder::<Sha1>();
     /// assert_eq!(security_params.auth_params(), [0x0; 12]);
     /// ```
-    pub fn set_auth_params_placeholder(&mut self) -> &mut Self {
-        self.set_auth_params(&AUTH_PARAMS_PLACEHOLDER);
+    pub fn set_auth_params_placeholder<D: Digest>(&mut self) -> &mut Self {
+        self.set_auth_params(D::AUTH_PARAMS_PLACEHOLDER);
         self
     }
 
@@ -335,14 +335,14 @@ impl SecurityParams {
     /// # Examples
     ///
     /// ```no_run
-    /// use snmp_usm::SecurityParams;
+    /// use snmp_usm::{SecurityParams, Sha1};
     ///
     /// # fn main() -> snmp_usm::SecurityResult<()> {
     /// # let in_security_params = [];
     /// let mut security_params =
     ///    SecurityParams::decode(&in_security_params)?;
     /// security_params.set_username(b"username")
-    ///     .set_auth_params_placeholder();
+    ///     .set_auth_params_placeholder::<Sha1>();
     /// // A message processing subsystem would set the security parameters of the outgoing message.
     /// // out_msg.set_security_params(&security_params);
     /// # Ok(())

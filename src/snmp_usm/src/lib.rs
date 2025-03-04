@@ -35,7 +35,7 @@
 //!
 //! ```no_run
 //! use snmp_usm::{
-//!     Aes128PrivKey, AuthKey, LocalizedMd5Key, PrivKey, SecurityParams, WithLocalizedKey
+//!     Aes128PrivKey, AuthKey, LocalizedMd5Key, PrivKey, SecurityParams, WithLocalizedKey, Sha1
 //! };
 //!
 //! # fn main() -> snmp_usm::SecurityResult<()> {
@@ -57,7 +57,7 @@
 //! security_params
 //!     .set_username(b"username")
 //!     .set_priv_params(&salt)
-//!     .set_auth_params_placeholder();
+//!     .set_auth_params_placeholder::<Sha1>();
 //! let encoded_security_params = security_params.encode();
 //!
 //! // The message processing service would set the security parameters of the outgoing message and
@@ -90,21 +90,30 @@ mod security_params;
 
 pub use auth_key::{AuthKey, Digest};
 pub use error::SecurityError;
-pub use localized_key::{LocalizedKey, WithLocalizedKey};
+pub use localized_key::{LocalizedKey, WithLocalizedKey, ExtensionVariant};
 pub use md5::Md5;
 pub use priv_key::{AesPrivKey, DesPrivKey, PrivKey};
 pub use security_params::SecurityParams;
 pub use sha1::Sha1;
+pub use sha2::{Sha256, Sha512};
 
 /// Type alias for a localized key specialized with the MD5 message-digest algorithm.
 pub type LocalizedMd5Key<'a> = LocalizedKey<'a, Md5>;
 /// Type alias for a localized key specialized with the SHA-1 message-digest algorithm.
 pub type LocalizedSha1Key<'a> = LocalizedKey<'a, Sha1>;
+/// Type alias for a localized key specialized with the SHA-256 message-digest algorithm.
+pub type LocalizedSha256Key<'a> = LocalizedKey<'a, Sha256>;
+/// Type alias for a localized key specialized with the SHA-512 message-digest algorithm.
+pub type LocalizedSha512Key<'a> = LocalizedKey<'a, Sha512>;
 
 /// Type alias for an authentication key specialized with the MD5 message-digest algorithm.
 pub type Md5AuthKey<'a> = AuthKey<'a, Md5>;
 /// Type alias for an authentication key specialized with SHA-1 message-digest algorithm.
 pub type Sha1AuthKey<'a> = AuthKey<'a, Sha1>;
+/// Type alias for an authentication key specialized with SHA-256 message-digest algorithm.
+pub type Sha256AuthKey<'a> = AuthKey<'a, Sha256>;
+/// Type alias for an authentication key specialized with SHA-512 message-digest algorithm.
+pub type Sha512AuthKey<'a> = AuthKey<'a, Sha512>;
 
 /// Type alias for the result of a security operation.
 pub type SecurityResult<T> = Result<T, SecurityError>;
@@ -113,6 +122,3 @@ pub type SecurityResult<T> = Result<T, SecurityError>;
 pub type Aes128PrivKey<'a, D> = AesPrivKey<'a, D, 128>;
 pub type Aes192PrivKey<'a, D> = AesPrivKey<'a, D, 192>;
 pub type Aes256PrivKey<'a, D> = AesPrivKey<'a, D, 256>;
-
-const AUTH_PARAMS_LEN: usize = 12;
-const AUTH_PARAMS_PLACEHOLDER: [u8; AUTH_PARAMS_LEN] = [0x0; AUTH_PARAMS_LEN];

@@ -1,4 +1,4 @@
-use snmp_usm::{SecurityError, SecurityParams};
+use snmp_usm::{SecurityError, SecurityParams, Sha1};
 
 #[test]
 fn it_encodes_empty_security_params() {
@@ -21,7 +21,7 @@ fn it_creates_security_params_with_username_and_auth_params() {
     let result = SecurityParams::decode(&incoming_security_params)
         .unwrap()
         .set_username(b"username")
-        .set_auth_params_placeholder()
+        .set_auth_params_placeholder::<Sha1>()
         .encode();
     let expected = vec![
         0x30, 0x35, 0x04, 0x11, 0x80, 0x00, 0x1F, 0x88, 0x80, 0xFA, 0xA8, 0x11, 0x60, 0x0F, 0xA2,
