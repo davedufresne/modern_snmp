@@ -37,7 +37,7 @@ fn it_decodes_scoped_pdu() -> MsgProcessingResult<()> {
     ];
     assert_eq!(scoped_pdu.engine_id(), engine_id);
 
-    assert_eq!(scoped_pdu.error_status(), PduErrorStatus::NoError);
+    assert_eq!(scoped_pdu.error_status().unwrap(), PduErrorStatus::NoError);
     assert_eq!(scoped_pdu.error_index(), 0);
 
     Ok(())
@@ -61,7 +61,7 @@ fn it_decodes_scoped_pdu_with_extra_bytes_at_the_end() -> MsgProcessingResult<()
     ];
     assert_eq!(scoped_pdu.engine_id(), engine_id);
 
-    assert_eq!(scoped_pdu.error_status(), PduErrorStatus::NoError);
+    assert_eq!(scoped_pdu.error_status().unwrap(), PduErrorStatus::NoError);
     assert_eq!(scoped_pdu.error_index(), 0);
 
     Ok(())
