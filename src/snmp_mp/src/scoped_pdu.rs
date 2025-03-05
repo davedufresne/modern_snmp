@@ -1,7 +1,10 @@
 use std::convert::TryFrom;
 use yasna::{self, ASN1Error, ASN1ErrorKind, ASN1Result, BERReader, DERWriter, Tag, TagClass};
 
-use crate::{MsgProcessingError, MsgProcessingResult, PduErrorStatus, PduType, VarBind};
+use crate::{
+    pdu_error_status::IntToPduErrorStatusError, MsgProcessingError, MsgProcessingResult,
+    PduErrorStatus, PduType, VarBind,
+};
 
 /// Scoped PDU contained in an SNMP message.
 ///
@@ -23,7 +26,9 @@ pub struct ScopedPdu {
     context_name: Vec<u8>,
     pdu_type: PduType,
     request_id: i32,
-    error_status: PduErrorStatus,
+    // In case of GetBulkRequest this means non_repeaters
+    error_status: u32,
+    // In case of GetBulkRequest this means max_repetitions
     error_index: u32,
     var_binds: Vec<VarBind>,
 }
@@ -190,9 +195,22 @@ impl ScopedPdu {
     /// ```
     /// # use snmp_mp::ScopedPdu;
     /// # let scoped_pdu = ScopedPdu::new(1);
-    /// let error_status = scoped_pdu.error_status();
+    /// let error_status = scoped_pdu.error_status().unwrap();
     /// ```
-    pub fn error_status(&self) -> PduErrorStatus {
+    pub fn error_status(&self) -> Result<PduErrorStatus, IntToPduErrorStatusError> {
+        PduErrorStatus::try_from(u8::try_from(self.error_status).map_err(|_| IntToPduErrorStatusError)?)
+    }
+
+    /// Returns non_repeaters in GetBulkRequest.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use snmp_mp::ScopedPdu;
+    /// # let scoped_pdu = ScopedPdu::new(1);
+    /// let non_repeaters = scoped_pdu.non_repeaters();
+    /// ```
+    pub fn non_repeaters(&self) -> u32 {
         self.error_status
     }
 
@@ -204,10 +222,25 @@ impl ScopedPdu {
     /// # use snmp_mp::{PduErrorStatus, PduType, ScopedPdu};
     /// let mut scoped_pdu = ScopedPdu::new(1);
     /// scoped_pdu.set_error_status(PduErrorStatus::NoSuchName);
-    /// assert_eq!(scoped_pdu.error_status(), PduErrorStatus::NoSuchName);
+    /// assert_eq!(scoped_pdu.error_status().unwrap(), PduErrorStatus::NoSuchName);
     /// ```
     pub fn set_error_status(&mut self, error_status: PduErrorStatus) -> &mut Self {
-        self.error_status = error_status;
+        self.error_status = error_status as u32;
+        self
+    }
+
+    /// Sets non_repeaters for GetBulkRequest.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use snmp_mp::{PduErrorStatus, PduType, ScopedPdu};
+    /// let mut scoped_pdu = ScopedPdu::new(1);
+    /// scoped_pdu.set_non_repeaters(1);
+    /// assert_eq!(scoped_pdu.non_repeaters(), 1);
+    /// ```
+    pub fn set_non_repeaters(&mut self, non_repeaters: u32) -> &mut Self {
+        self.error_status = non_repeaters;
         self
     }
 
@@ -224,6 +257,19 @@ impl ScopedPdu {
         self.error_index
     }
 
+    /// Returns max_repetitions for GetBulkRequest.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use snmp_mp::ScopedPdu;
+    /// # let scoped_pdu = ScopedPdu::new(1);
+    /// assert_eq!(scoped_pdu.max_repetitions(), 0);
+    /// ```
+    pub fn max_repetitions(&self) -> u32 {
+        self.error_index
+    }
+
     /// Sets the error index.
     ///
     /// # Examples
@@ -236,6 +282,21 @@ impl ScopedPdu {
     /// ```
     pub fn set_error_index(&mut self, error_index: u32) -> &mut Self {
         self.error_index = error_index;
+        self
+    }
+
+    /// Sets max repetitions for GetBulkRequest.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use snmp_mp::ScopedPdu;
+    /// let mut scoped_pdu = ScopedPdu::new(1);
+    /// scoped_pdu.set_max_repetitions(1);
+    /// assert_eq!(scoped_pdu.max_repetitions(), 1);
+    /// ```
+    pub fn set_max_repetitions(&mut self, max_repetitions: u32) -> &mut Self {
+        self.error_index = max_repetitions;
         self
     }
 
@@ -369,8 +430,7 @@ impl ScopedPdu {
                 reader.read_sequence(|reader| {
                     let request_id = reader.next().read_i32()?;
 
-                    let error_status = PduErrorStatus::try_from(reader.next().read_u8()?)
-                        .map_err(|_| ASN1Error::new(ASN1ErrorKind::Invalid))?;
+                    let error_status = reader.next().read_u32()?;
 
                     let error_index = reader.next().read_u32()?;
                     let var_binds = reader.next().collect_sequence_of(VarBind::decode)?;
