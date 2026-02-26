@@ -13,7 +13,7 @@ categories = ["command-line-utilities"]
 [dependencies]
 exitfailure = "0.5.1"
 failure = "0.1.8"
-rand = "0.7.3"
+rand = "0.10.0"
 snmp_mp = "0.1.0"
 snmp_usm = "0.2.1"
-structopt = "0.3.17"
+structopt = "0.3.26"

@@ -11,11 +11,11 @@ keywords = ["snmp", "snmpv3", "usm", "security"]
 categories = ["network-programming"]
 
 [dependencies]
-aes = "0.8.2"
-block-modes = "0.5.0"
+aes = "0.8.4"
+cbc = {git = "https://github.com/RustCrypto/block-modes", tag = "cbc-v0.1.2"}
 cfb-mode = "0.8.2"
-des = "0.4.0"
-hmac = "0.8.1"
-md-5 = "0.9.1"
-sha-1 = "0.9.1"
-yasna = "0.3.2"
+des = "0.8.1"
+hmac = "0.12.1"
+md-5 = "0.10.6"
+sha-1 = "0.10.1"
+yasna = "0.5.2"

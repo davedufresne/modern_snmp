@@ -446,7 +446,7 @@ impl SnmpMsg {
         writer.write_sequence(|writer| {
             writer.next().write_u32(self.id);
             writer.next().write_u32(self.max_size);
-            writer.next().write_bytes(&[self.flags.bits]);
+            writer.next().write_bytes(&[self.flags.bits()]);
             writer.next().write_u32(self.security_model);
         });
     }
@@ -551,7 +551,7 @@ impl Default for SnmpMsg {
 }
 
 bitflags! {
-    #[derive(Default)]
+    #[derive(Clone, Debug, Default, Eq, Hash, PartialEq)]
     struct SnmpMsgFlags: u8 {
         const AUTHENTICATION = 0b0000_0001;
         const PRIVACY = 0b0000_0010;

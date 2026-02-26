@@ -2,16 +2,15 @@ use crate::{
     pos_finder::PosFinder, LocalizedKey, Md5, SecurityError, SecurityParams, SecurityResult, Sha1,
     AUTH_PARAMS_LEN, AUTH_PARAMS_PLACEHOLDER,
 };
-use hmac::{Hmac, Mac, NewMac};
-use md5::digest::{BlockInput, FixedOutput, Reset, Update};
+use hmac::SimpleHmac;
+use md5::digest::{core_api::BlockSizeUser, Digest as DigestTrait, Mac};
 use std::ops::Range;
 
 // Duration in seconds.
 const TIME_WINDOW: u32 = 150;
 
-/// Convenience wrapper around `Update`, `BlockInput`, `FixedOutput`, `Reset`, `Default`, and
-/// `Clone` traits. Useful as trait bound where a digest algorithm is needed.
-pub trait Digest: Update + BlockInput + FixedOutput + Reset + Default + Clone {}
+/// Convenience wrapper around digest traits. Useful as trait bound where a digest algorithm is needed.
+pub trait Digest: DigestTrait + BlockSizeUser + Clone {}
 impl Digest for Md5 {}
 impl Digest for Sha1 {}
 
@@ -109,7 +108,7 @@ impl<'a, D: 'a> AuthKey<'a, D> {
             return Err(SecurityError::NotInTimeWindow);
         }
 
-        let time_diff = Self::diff(security_params.engine_time(), local_engine_time);
+        let time_diff = security_params.engine_time().abs_diff(local_engine_time);
         if time_diff > TIME_WINDOW {
             return Err(SecurityError::NotInTimeWindow);
         }
@@ -137,14 +136,6 @@ impl<'a, D: 'a> AuthKey<'a, D> {
         }
 
         Ok(())
-    }
-
-    fn diff(lhs: u32, rhs: u32) -> u32 {
-        if lhs > rhs {
-            lhs - rhs
-        } else {
-            rhs - lhs
-        }
     }
 
     fn less_than_over(amount: u32, lhs: u32, rhs: u32) -> bool {
@@ -268,7 +259,7 @@ where
 
     // Calculates the HMAC of the SNMP message.
     fn hmac(&self, msg: &[u8]) -> Vec<u8> {
-        let mut mac = Hmac::<D>::new_varkey(self.localized_key.bytes()).unwrap();
+        let mut mac = SimpleHmac::<D>::new_from_slice(self.localized_key.bytes()).unwrap();
 
         mac.update(msg);
         let result = mac.finalize();

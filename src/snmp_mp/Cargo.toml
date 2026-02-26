@@ -11,5 +11,5 @@ keywords = ["snmp", "snmpv3", "message", "processing", "pdu"]
 categories = ["network-programming"]
 
 [dependencies]
-bitflags = "1.2.1"
-yasna = "0.3.2"
+bitflags = "2.11.0"
+yasna = "0.5.2"
