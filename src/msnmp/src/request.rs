@@ -1,5 +1,5 @@
 use crate::{format_var_bind, msg_factory, Client, Session, Step};
-use failure::Error;
+use anyhow::{anyhow, Result};
 use snmp_mp::{ObjectIdent, PduType, SnmpMsg, VarBind, VarValue};
 use snmp_usm::{Digest, PrivKey};
 use std::str::FromStr;
@@ -11,7 +11,7 @@ pub fn snmp_get<D, P, S>(
     oids: Vec<String>,
     client: &mut Client,
     session: &mut Session<D, P, S>,
-) -> Result<(), Error>
+) -> Result<()>
 where
     D: Digest,
     P: PrivKey<Salt = S>,
@@ -19,7 +19,7 @@ where
 {
     let var_binds = strings_to_var_binds(oids.iter());
     if var_binds.is_empty() {
-        return Err(format_err!("invalid OID(s) supplied"));
+        return Err(anyhow!("invalid OID(s) supplied"));
     }
 
     let mut get_request = msg_factory::create_request_msg(pdu_type, var_binds, session);
@@ -38,7 +38,7 @@ pub fn snmp_walk<D, P, S>(
     oid: Option<String>,
     client: &mut Client,
     session: &mut Session<D, P, S>,
-) -> Result<(), Error>
+) -> Result<()>
 where
     D: Digest,
     P: PrivKey<Salt = S>,

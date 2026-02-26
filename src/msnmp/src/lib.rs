@@ -5,17 +5,14 @@ mod params;
 mod request;
 mod session;
 
+use anyhow::Result;
 use client::Client;
-use failure::Error;
 pub use params::{Command, Params};
 use session::{Session, Step};
 use snmp_mp::PduType;
 use snmp_usm::{
     Aes128PrivKey, AuthKey, DesPrivKey, Digest, LocalizedKey, Md5, PrivKey, Sha1, WithLocalizedKey,
 };
-
-#[macro_use]
-extern crate failure;
 
 const SNMP_PORT_NUM: u32 = 161;
 
@@ -37,7 +34,7 @@ macro_rules! execute_request {
     }};
 }
 
-pub fn run(params: Params) -> Result<(), Error> {
+pub fn run(params: Params) -> Result<()> {
     if Some(Params::SHA1_DIGEST) == params.auth_protocol.as_deref() {
         execute_request!(Sha1, params)
     } else {
@@ -45,7 +42,7 @@ pub fn run(params: Params) -> Result<(), Error> {
     }
 }
 
-fn execute_request<'a, D, P, S>(params: Params, salt: P::Salt) -> Result<(), Error>
+fn execute_request<'a, D, P, S>(params: Params, salt: P::Salt) -> Result<()>
 where
     D: Digest + 'a,
     P: PrivKey<Salt = S> + WithLocalizedKey<'a, D>,

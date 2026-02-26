@@ -11,9 +11,8 @@ keywords = ["snmp", "snmpv3" ]
 categories = ["command-line-utilities"]
 
 [dependencies]
-exitfailure = "0.5.1"
-failure = "0.1.8"
 rand = "0.7.3"
 snmp_mp = "0.1.0"
 snmp_usm = "0.2.1"
-structopt = "0.3.17"
+clap = { version = "4.5.60", features = ["derive", "help", "std", "usage"], default-features = false }
+anyhow = "1.0.102"
